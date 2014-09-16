@@ -6,7 +6,5 @@ package cs420.usm.program1.containers;
 public class PurchaseSelection {
     public int selection;
     public int position;
-
-
 }
 

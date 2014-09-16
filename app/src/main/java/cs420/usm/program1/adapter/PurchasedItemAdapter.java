@@ -19,7 +19,6 @@ import java.util.Observer;
 import cs420.usm.program1.R;
 import cs420.usm.program1.containers.Item;
 import cs420.usm.program1.containers.PurchaseSelection;
-import cs420.usm.program1.containers.PurchasedItem;
 
 /**
  * Created by drs4 on 9/6/2014.
@@ -87,7 +86,7 @@ public class PurchasedItemAdapter extends ArrayAdapter<Item> implements Property
 
             @Override
             public void onNothingSelected(AdapterView<?> arg0) {
-                // TODO Auto-generated method stub
+                //Do nothing..
 
             }
 

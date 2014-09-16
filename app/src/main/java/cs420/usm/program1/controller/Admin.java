@@ -2,65 +2,21 @@ package cs420.usm.program1.controller;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteCursorDriver;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQuery;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.util.ArrayList;
-import java.util.Date;
-
 import cs420.usm.program1.R;
-import cs420.usm.program1.containers.Customer;
-import cs420.usm.program1.containers.Item;
-import cs420.usm.program1.containers.Order;
-import cs420.usm.program1.containers.PurchasedItem;
-import cs420.usm.program1.sqlite.DBHandler;
 
 
 public class Admin extends Activity {
-
-    ArrayList<Customer> customers;
-    ArrayList<Item> items;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
 
-        DBHandler db = new DBHandler(this.getApplicationContext());
-
-        //temp list items
-        Customer customer = new Customer(1, "Danno Shepard", "USM");
-        Item item = new Item(1, "Sun Flowers", 5);
-
-
-        Order order = new Order();
-        order.items.add(new PurchasedItem(1, "Sun Flower", 3));
-        order.date = new Date().toString();
-        order.id = 1;
-
-        System.out.println(order.date);
-
-        customer.orderHistory.add(order);
-        db.addCustomer(customer);
-        db.addItemToInventory(item);
-
-
-        customers = new ArrayList<Customer>();
-        items = new ArrayList<Item>();
-        customers = db.getCustomers();
-        items = db.getItems();
-        //customers.add(customer);
-        //items.add(item);
-
-
-        //TODO -- Read saved data and store into these arrayLists
     }
 
 
@@ -87,23 +43,15 @@ public class Admin extends Activity {
         System.out.println("onActivityResult!!");
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == 0)
-            customers = intent.getParcelableArrayListExtra("customers");
-        else if (requestCode == 1)
-            items = intent.getParcelableArrayListExtra("items");
-
     }
 
     public void displayCustomers(View view) {
         Intent intent = new Intent(view.getContext(), Customers.class);
-        intent.putExtra("customers", customers);
-        intent.putExtra("items", items);
-        startActivityForResult(intent, 0);
+        startActivity(intent);
     }
 
     public void displayInventory(View view) {
         Intent intent = new Intent(view.getContext(), CurrentInventory.class);
-        intent.putExtra("items", items);
-        startActivityForResult(intent, 1);
+        startActivity(intent);
     }
 }

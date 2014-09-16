@@ -11,7 +11,6 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import cs420.usm.program1.R;
-import cs420.usm.program1.containers.Item;
 import cs420.usm.program1.containers.PurchasedItem;
 
 /**

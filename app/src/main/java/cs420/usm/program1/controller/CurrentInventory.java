@@ -7,7 +7,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -15,6 +14,7 @@ import java.util.ArrayList;
 import cs420.usm.program1.R;
 import cs420.usm.program1.adapter.ItemAdapter;
 import cs420.usm.program1.containers.Item;
+import cs420.usm.program1.sqlite.DBHandler;
 
 
 public class CurrentInventory extends Activity {
@@ -26,11 +26,14 @@ public class CurrentInventory extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_current_inventory);
 
-        Intent intent = getIntent();
-        items = intent.getParcelableArrayListExtra("items");
+    }
+
+    public void onResume() {
+        super.onResume();
+        DBHandler db = new DBHandler(getApplicationContext());
+        items = db.getItems();
+
         populateList();
-
-
     }
 
     private void populateList() {
@@ -42,9 +45,8 @@ public class CurrentInventory extends Activity {
 
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
                 Intent intent = new Intent(CurrentInventory.this, ItemDetails.class);
-                intent.putExtra("items", items);
                 intent.putExtra("position", position);
-                startActivityForResult(intent, 0);
+                startActivity(intent);
             }
         });
     }
@@ -61,7 +63,6 @@ public class CurrentInventory extends Activity {
         intent.putExtra("items", items);
         setResult(Activity.RESULT_OK, intent);
         finish();
-        //super.onBackPressed();
     }
 
     @Override
@@ -93,6 +94,6 @@ public class CurrentInventory extends Activity {
     public void addNewItem(View view) {
         Intent intent = new Intent(view.getContext(), NewItem.class);
         intent.putExtra("items", items);
-        startActivityForResult(intent, 0);
+        startActivity(intent);
     }
 }

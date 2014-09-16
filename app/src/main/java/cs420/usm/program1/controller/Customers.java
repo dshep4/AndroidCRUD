@@ -1,14 +1,12 @@
 package cs420.usm.program1.controller;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -16,25 +14,25 @@ import java.util.ArrayList;
 import cs420.usm.program1.R;
 import cs420.usm.program1.adapter.CustomerAdapter;
 import cs420.usm.program1.containers.Customer;
-import cs420.usm.program1.containers.Item;
+import cs420.usm.program1.sqlite.DBHandler;
 
 
 public class Customers extends Activity {
 
     ArrayList<Customer> customers;
-    ArrayList<Item> items;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customers);
-
-        Intent intent = getIntent();
-        customers = intent.getParcelableArrayListExtra("customers");
-        items = intent.getParcelableArrayListExtra("items");
-        populateList();
     }
 
+    public void onResume() {
+        super.onResume();
+        DBHandler db = new DBHandler(getApplicationContext());
+        customers = db.getOnlyCustomers();
+        populateList();
+    }
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         System.out.println("onActivityResult!!");
         super.onActivityResult(requestCode, resultCode, intent);
@@ -52,10 +50,8 @@ public class Customers extends Activity {
 
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
                 Intent intent = new Intent(Customers.this, CustomerDetails.class);
-                intent.putExtra("items", items);
-                intent.putExtra("customers", customers);
                 intent.putExtra("position", position);
-                startActivityForResult(intent, 0);
+                startActivity(intent);
             }
         });
     }
@@ -63,10 +59,8 @@ public class Customers extends Activity {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent();
-        intent.putExtra("customers", customers);
         setResult(Activity.RESULT_OK, intent);
         finish();
-        //super.onBackPressed();
     }
 
     @Override
@@ -87,7 +81,6 @@ public class Customers extends Activity {
         }
         else if (id == android.R.id.home) {
             Intent intent = new Intent();
-            intent.putExtra("customers", customers);
             setResult(0, intent);
             onBackPressed();
             return true;
@@ -98,8 +91,7 @@ public class Customers extends Activity {
     public void addCustomer(View view) {
 
         Intent intent = new Intent(view.getContext(), AddCustomer.class);
-        intent.putExtra("customers", customers);
-        startActivityForResult(intent, 0);
+        startActivity(intent);
     }
 
 }

@@ -7,27 +7,22 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 import cs420.usm.program1.R;
 import cs420.usm.program1.adapter.CustomerHistoryAdapter;
 import cs420.usm.program1.containers.Customer;
-import cs420.usm.program1.containers.Item;
 import cs420.usm.program1.containers.Order;
+import cs420.usm.program1.sqlite.DBHandler;
 
 
 public class CustomerDetails extends Activity {
 
     ArrayList<Customer> customers;
-    ArrayList<Item> items;
+    ArrayList<Order> orders;
     int position;
 
     ListView orderHistory;
@@ -38,9 +33,18 @@ public class CustomerDetails extends Activity {
         setContentView(R.layout.activity_customer_details);
 
         Intent intent = getIntent();
-        items = intent.getParcelableArrayListExtra("items");
-        customers = intent.getParcelableArrayListExtra("customers");
         position = intent.getIntExtra("position", 0);
+        System.out.println("CustomerDetails - onCreate() Position: " + position);
+
+    }
+
+    public void onResume() {
+        super.onResume();
+        System.out.println("onResume()!!");
+
+        DBHandler db = new DBHandler(getApplicationContext());
+        customers = db.getOnlyCustomers();
+        orders = db.getOrderHistoryOfCustomer(customers.get(position));
 
         TextView name = (TextView) findViewById(R.id.customer_details_name);
         TextView address = (TextView) findViewById(R.id.customer_details_address);
@@ -51,17 +55,15 @@ public class CustomerDetails extends Activity {
         id.setText(String.format("ID: %d", customers.get(position).id));
 
         orderHistory = (ListView) findViewById(R.id.customer_details_order_history_list);
-        CustomerHistoryAdapter customerHistoryAdapter = new CustomerHistoryAdapter(this, R.layout.customer_history, customers.get(position).orderHistory);
+        CustomerHistoryAdapter customerHistoryAdapter = new CustomerHistoryAdapter(this, R.layout.customer_history, orders);
         orderHistory.setAdapter(customerHistoryAdapter);
         orderHistory.setClickable(true);
         orderHistory.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             public void onItemClick(AdapterView<?> arg0, View arg1, int listPosition, long arg3) {
                 Intent intent = new Intent(CustomerDetails.this, OrderDetails.class);
-                intent.putExtra("order", customers.get(position).orderHistory.get(listPosition));
-                //intent.putExtra("items", items);
-                //intent.putExtra("position", position);
-                //intent.putExtra("listPosition", listPosition);
+                intent.putExtra("position", position);
+                intent.putExtra("orderId", orders.get(listPosition).id);
                 startActivityForResult(intent, 0);
             }
         });
@@ -71,15 +73,9 @@ public class CustomerDetails extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         System.out.println("onActivityResult!!");
         super.onActivityResult(requestCode, resultCode, intent);
-        if (requestCode == 1) {
-            Order order = intent.getParcelableExtra("order");
-            int index = intent.getIntExtra("position", 0);
-            customers.get(index).orderHistory.add(order);
-            CustomerHistoryAdapter customerHistoryAdapter = (CustomerHistoryAdapter) orderHistory.getAdapter();
-            customerHistoryAdapter.notifyDataSetChanged();
-        }
-
-
+        position = intent.getIntExtra("position", 0);
+        CustomerHistoryAdapter customerHistoryAdapter = (CustomerHistoryAdapter) orderHistory.getAdapter();
+        customerHistoryAdapter.notifyDataSetChanged();
 
     }
 
@@ -99,10 +95,9 @@ public class CustomerDetails extends Activity {
         if (id == R.id.action_settings) {
             return true;
         }
-        //TODO -- pass items too!
+
         else if (id == android.R.id.home) {
             Intent intent = new Intent();
-            intent.putExtra("customers", customers);
             setResult(Activity.RESULT_OK, intent);
             onBackPressed();
             return true;
@@ -113,16 +108,13 @@ public class CustomerDetails extends Activity {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent();
-        intent.putExtra("customers", customers);
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
 
     public void placeOrder(View view) {
         Intent intent = new Intent(view.getContext(), PlaceOrder.class);
-        intent.putExtra("items", items);
-        intent.putExtra("customers", customers);
         intent.putExtra("position", position);
-        startActivityForResult(intent,1);
+        startActivityForResult(intent, 0);
     }
 }

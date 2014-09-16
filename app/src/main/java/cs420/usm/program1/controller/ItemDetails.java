@@ -9,8 +9,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 
 import cs420.usm.program1.R;
@@ -39,8 +37,10 @@ public class ItemDetails extends Activity {
         response = (TextView) findViewById(R.id.item_details_response);
 
         Intent data = getIntent();
-        items = data.getParcelableArrayListExtra("items");
         position = data.getIntExtra("position", 0);
+
+        DBHandler db = new DBHandler(getApplicationContext());
+        items = db.getItems();
 
         name.setText(items.get(position).name);
         id.setText(String.format("ID: %d",items.get(position).id));
@@ -53,7 +53,6 @@ public class ItemDetails extends Activity {
         intent.putExtra("items", items);
         setResult(Activity.RESULT_OK, intent);
         finish();
-        //super.onBackPressed();
     }
 
     @Override
@@ -93,6 +92,7 @@ public class ItemDetails extends Activity {
 
             DBHandler db = new DBHandler(getApplicationContext());
             db.update(items.get(position));
+            db.getItems();
         }
     }
 }

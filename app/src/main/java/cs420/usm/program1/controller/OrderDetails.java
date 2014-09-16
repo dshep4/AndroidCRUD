@@ -11,20 +11,16 @@ import java.util.ArrayList;
 
 import cs420.usm.program1.R;
 import cs420.usm.program1.adapter.OrderItemAdapter;
-import cs420.usm.program1.containers.Customer;
-import cs420.usm.program1.containers.Item;
-import cs420.usm.program1.containers.Order;
+import cs420.usm.program1.containers.PurchasedItem;
+import cs420.usm.program1.sqlite.DBHandler;
 
 
 public class OrderDetails extends Activity {
 
-    //Customer customer;
-    //int position;
+    int orderId;
+    ArrayList<PurchasedItem> items;
 
-    ArrayList<Customer> customers;
-    ArrayList<Item> items;
     int position;
-    int listPosition;
 
     ListView orderDetailsList;
 
@@ -34,14 +30,15 @@ public class OrderDetails extends Activity {
         setContentView(R.layout.activity_order_details);
 
         Intent data = getIntent();
-        //customers = data.getParcelableArrayListExtra("customers");
-        //items = data.getParcelableArrayListExtra("items");
-        //position = data.getIntExtra("position", 0);
-        //listPosition = data.getIntExtra("listPosition", 0);
-        Order order = data.getParcelableExtra("order");
+        orderId = data.getIntExtra("orderId", 0);
+        position = data.getIntExtra("position", 0);
+
+        System.out.println("OrderDetails - onCreate() Position: " + position);
+        DBHandler db = new DBHandler(getApplicationContext());
+        items = db.getOrderItems(orderId);
 
         orderDetailsList = (ListView) findViewById(R.id.order_details_list);
-        OrderItemAdapter orderItemAdapter = new OrderItemAdapter(this, R.layout.order_history_details_row, order.items);
+        OrderItemAdapter orderItemAdapter = new OrderItemAdapter(this, R.layout.order_history_details_row, items);
         orderDetailsList.setAdapter(orderItemAdapter);
 
     }
@@ -57,7 +54,7 @@ public class OrderDetails extends Activity {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent();
-        //intent.putExtra("customers", customers);
+        intent.putExtra("position", position);
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
@@ -73,11 +70,12 @@ public class OrderDetails extends Activity {
         }
         else if (id == android.R.id.home) {
             Intent intent = new Intent();
-            //intent.putExtra("customers", customers);
+            intent.putExtra("position", position);
             setResult(Activity.RESULT_OK, intent);
             onBackPressed();
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 }

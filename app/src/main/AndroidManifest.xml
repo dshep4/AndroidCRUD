@@ -66,22 +66,6 @@
                 android:value="cs420.usm.program1.controller.Customers" />
         </activity>
         <activity
-            android:name=".controller.CustomerHistory"
-            android:label="@string/title_activity_customer_history"
-            android:parentActivityName=".controller.CustomerDetails" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="cs420.usm.program1.controller.CustomerDetails" />
-        </activity>
-        <activity
-            android:name=".controller.PurchaseDetails"
-            android:label="@string/title_activity_purchase_details"
-            android:parentActivityName=".controller.CustomerHistory" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="cs420.usm.program1.CustomerHistory" />
-        </activity>
-        <activity
             android:name=".controller.ItemDetails"
             android:label="@string/title_activity_item_details"
             android:parentActivityName=".controller.CurrentInventory" >

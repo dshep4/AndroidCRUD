@@ -3,19 +3,11 @@ package cs420.usm.program1.controller;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,9 +15,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import cs420.usm.program1.R;
-import cs420.usm.program1.adapter.ItemAdapter;
 import cs420.usm.program1.adapter.PurchasedItemAdapter;
-import cs420.usm.program1.adapter.SpinnerAdapter;
 import cs420.usm.program1.containers.Customer;
 import cs420.usm.program1.containers.Item;
 import cs420.usm.program1.containers.Order;
@@ -51,9 +41,11 @@ public class PlaceOrder extends Activity implements Observer  {
         setContentView(R.layout.activity_place_order);
 
         Intent data = getIntent();
-        items = data.getParcelableArrayListExtra("items");
-        customers = data.getParcelableArrayListExtra("customers");
         position = data.getIntExtra("position", 0);
+
+        DBHandler db = new DBHandler(getApplicationContext());
+        customers = db.getOnlyCustomers();
+        items = db.getItems();
 
         orderList = (ListView) findViewById(R.id.purchaseList);
         PurchasedItemAdapter itemAdapter = new PurchasedItemAdapter(this, R.layout.purchase_table_row, items, this);
@@ -68,7 +60,6 @@ public class PlaceOrder extends Activity implements Observer  {
 
     public void update(Observable obs, Object obj) {
         PurchaseSelection ps = (PurchaseSelection) obj;
-        System.out.println("YEAHHH! " + ps.position + ": " + ps.selection);
         shoppingCart.get(ps.position).qtyPurchased = ps.selection;
     }
 
@@ -82,7 +73,6 @@ public class PlaceOrder extends Activity implements Observer  {
     @Override
     public void onBackPressed() {
         Intent intent = new Intent();
-        intent.putExtra("order", order);
         intent.putExtra("position", position);
         setResult(Activity.RESULT_OK, intent);
         finish();
@@ -99,7 +89,7 @@ public class PlaceOrder extends Activity implements Observer  {
         }
         else if (id == android.R.id.home) {
             Intent intent = new Intent();
-            intent.putExtra("order", order);
+            //intent.putExtra("order", order);
             intent.putExtra("position", position);
             setResult(Activity.RESULT_OK, intent);
             onBackPressed();
@@ -109,21 +99,26 @@ public class PlaceOrder extends Activity implements Observer  {
     }
 
     public void makePurchase(View view) {
-        //TODO -- save the order to the customer to be displayed in the customer's history
-        Toast toast = Toast.makeText(getApplicationContext(), "Thank You!", Toast.LENGTH_LONG);
-        toast.show();
         ArrayList<PurchasedItem> finalCart = new ArrayList<PurchasedItem>();
         for (PurchasedItem item : shoppingCart) {
             if (item.qtyPurchased > 0)
                 finalCart.add(item);
         }
+        if (finalCart.size() == 0) {
+            Toast toast = Toast.makeText(getApplicationContext(), "Cart Empty!", Toast.LENGTH_LONG);
+            toast.show();
+            return;
+        }
 
-        order = new Order(finalCart, new Date().toString());
-        order.id = getNextOrderId();
+        Toast toast = Toast.makeText(getApplicationContext(), "Thank You!", Toast.LENGTH_LONG);
+        toast.show();
 
         DBHandler db = new DBHandler(getApplicationContext());
-        db.addOrderToCustomer(order, customers.get(position));
+
+        order = new Order(new Date().toString(), db.getNextOrderId());
+        db.addItemsToOrder(finalCart, order, customers.get(position));
         removeItemsFromInventory(finalCart);
+
         PurchasedItemAdapter adapter = (PurchasedItemAdapter) orderList.getAdapter();
         adapter.notifyDataSetChanged();
 
@@ -140,12 +135,5 @@ public class PlaceOrder extends Activity implements Observer  {
             }
         }
     }
-    public int getNextOrderId() {
-        int id = 0;
-        for (Order order : customers.get(position).orderHistory) {
-            if (order.id > id)
-                id = order.id;
-        }
-        return id;
-    }
+
 }

@@ -29,8 +29,8 @@ public class AddCustomer extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_customer);
 
-        Intent intent = getIntent();
-        customers = intent.getParcelableArrayListExtra("customers");
+        DBHandler db = new DBHandler(getApplicationContext());
+        customers = db.getOnlyCustomers();
 
         name = (EditText) findViewById(R.id.add_customer_name);
         address = (EditText) findViewById(R.id.add_customer_address);

@@ -30,8 +30,8 @@ public class NewItem extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_item);
 
-        Intent intent = getIntent();
-        items = intent.getParcelableArrayListExtra("items");
+        DBHandler db = new DBHandler(getApplicationContext());
+        items = db.getItems();
 
         name = (EditText) findViewById(R.id.add_new_item_name);
         qty = (EditText) findViewById(R.id.add_new_item_qty);
@@ -44,7 +44,6 @@ public class NewItem extends Activity {
         intent.putExtra("items", items);
         setResult(Activity.RESULT_OK, intent);
         finish();
-        //super.onBackPressed();
     }
 
     @Override

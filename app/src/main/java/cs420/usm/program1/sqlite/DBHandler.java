@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import cs420.usm.program1.containers.Customer;
@@ -66,30 +65,25 @@ public class DBHandler extends SQLiteOpenHelper {
                 + COLUMN_CUSTOMERS_ADDRESS + " TEXT)";
         db.execSQL(CREATE_CUSTOMERS_TABLE);
 
-        String CREATE_INVENTORY_TABLE = "CREATE TABLE " + TABLE_INVENTORY + "("
+        String CREATE_INVENTORY_TABLE = "CREATE TABLE " + TABLE_INVENTORY + " ("
                 + COLUMN_INVENTORY_ITEMID + " INTEGER PRIMARY KEY,"
                 + COLUMN_INVENTORY_NAME + " TEXT,"
                 + COLUMN_INVENTORY_QTY + " INTEGER)";
         db.execSQL(CREATE_INVENTORY_TABLE);
 
-        String CREATE_PURCHASES_TABLE = "CREATE TABLE " + TABLE_PURCHASES + "("
-                + COLUMN_PURCHASES_ORDERID + " INTEGER PRIMARY KEY,"
+        String CREATE_PURCHASES_TABLE = "CREATE TABLE " + TABLE_PURCHASES + " ("
+                + COLUMN_PURCHASES_ORDERID + " INTEGER,"
                 + COLUMN_PURCHASES_ITEMID + " INTEGER,"
                 + COLUMN_PURCHASES_QTYPURCHASED + " INTEGER,"
-                + " FOREIGN KEY( "+COLUMN_PURCHASES_ITEMID+ ") REFERENCES "
-                + TABLE_INVENTORY + "(" + COLUMN_INVENTORY_ITEMID + "))";
+                + " PRIMARY KEY ( "+ COLUMN_PURCHASES_ITEMID + ", " + COLUMN_PURCHASES_ORDERID + "))";
         db.execSQL(CREATE_PURCHASES_TABLE);
 
-        String CREATE_ORDERS_TABLE = "CREATE TABLE " + TABLE_ORDERS + "("
+        String CREATE_ORDERS_TABLE = "CREATE TABLE " + TABLE_ORDERS + " ("
                 + COLUMN_ORDERS_CUSTOMERID + " INTEGER,"
-                + COLUMN_ORDERS_ORDERID + " INTEGER PRIMARY KEY,"
+                + COLUMN_ORDERS_ORDERID + " INTEGER,"
                 + COLUMN_ORDERS_DATE + " TEXT,"
-                + "FOREIGN KEY (" + COLUMN_ORDERS_CUSTOMERID + ") REFERENCES "
-                + TABLE_CUSTOMERS + "(" + COLUMN_CUSTOMERS_CUSTOMERID
-                +"))";
+                + "PRIMARY KEY (" + COLUMN_ORDERS_CUSTOMERID + ", " + COLUMN_ORDERS_ORDERID + "))";
         db.execSQL(CREATE_ORDERS_TABLE);
-
-
 
     }
 
@@ -110,54 +104,8 @@ public class DBHandler extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_CUSTOMERS, null, values);
-        if (customer.orderHistory != null)
-            addOrdersToCustomer(customer, db);
-
         db.close();
     }
-
-    public void addOrdersToCustomer(Customer customer, SQLiteDatabase db) {
-
-        for (Order order : customer.orderHistory) {
-            ContentValues orderValues = new ContentValues();
-            orderValues.put(COLUMN_ORDERS_CUSTOMERID, customer.id);
-            orderValues.put(COLUMN_ORDERS_ORDERID, order.id);
-            orderValues.put(COLUMN_ORDERS_DATE, order.date);
-            for (PurchasedItem item : order.items) {
-                ContentValues itemValues = new ContentValues();
-                itemValues.put(COLUMN_PURCHASES_ORDERID, order.id);
-                itemValues.put(COLUMN_PURCHASES_ITEMID, item.id);
-                itemValues.put(COLUMN_PURCHASES_QTYPURCHASED, item.qtyPurchased);
-
-                db.insert(TABLE_PURCHASES, null, itemValues);
-            }
-
-            db.insert(TABLE_ORDERS, null, orderValues);
-        }
-
-    }
-
-    public void addOrderToCustomer(Order order, Customer customer) {
-
-        SQLiteDatabase db = getWritableDatabase();
-
-        ContentValues orderValues = new ContentValues();
-        orderValues.put(COLUMN_ORDERS_CUSTOMERID, customer.id);
-        orderValues.put(COLUMN_ORDERS_ORDERID, order.id);
-        orderValues.put(COLUMN_ORDERS_DATE, order.date);
-        for (PurchasedItem item : order.items) {
-            ContentValues itemValues = new ContentValues();
-            itemValues.put(COLUMN_PURCHASES_ORDERID, order.id);
-            itemValues.put(COLUMN_PURCHASES_ITEMID, item.id);
-            itemValues.put(COLUMN_PURCHASES_QTYPURCHASED, item.qtyPurchased);
-
-            db.insert(TABLE_PURCHASES, null, itemValues);
-        }
-
-        db.insert(TABLE_ORDERS, null, orderValues);
-    }
-
-
 
     public void addItemToInventory(Item item) {
         ContentValues values = new ContentValues();
@@ -171,7 +119,41 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
 
-    public ArrayList<Customer> getCustomers() {
+    public ArrayList<Item> getItems() {
+        ArrayList<Item> items = new ArrayList<Item>();
+
+        String itemsQuery = "SELECT " + COLUMN_INVENTORY_ITEMID + ","
+                + COLUMN_INVENTORY_NAME + "," + COLUMN_INVENTORY_QTY
+                + " FROM " + TABLE_INVENTORY;
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(itemsQuery, null);
+        cursor.moveToFirst();
+        while (cursor.isAfterLast() == false) {
+            Item item = new Item(cursor.getInt(0), cursor.getString(1), cursor.getInt(2));
+            items.add(item);
+            System.out.println(item);
+            cursor.moveToNext();
+        }
+
+        db.close();
+        return items;
+
+    }
+
+    public void update(Item item) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_INVENTORY_NAME, item.name);
+        values.put(COLUMN_INVENTORY_ITEMID, item.id);
+        values.put(COLUMN_INVENTORY_QTY, item.qtyAvailable);
+
+        db.update(TABLE_INVENTORY, values, COLUMN_INVENTORY_ITEMID + " = " + String.format("%d", item.id), null);
+
+        db.close();
+    }
+
+    public ArrayList<Customer> getOnlyCustomers() {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ArrayList<Customer> customers = new ArrayList<Customer>();
@@ -186,86 +168,97 @@ public class DBHandler extends SQLiteOpenHelper {
         cursor.moveToFirst();
         while (cursor.isAfterLast() == false) {
             Customer customer = new Customer(cursor.getInt(0), cursor.getString(1), cursor.getString(2));
-            String orderQuery = "SELECT " + COLUMN_ORDERS_ORDERID + "," + COLUMN_ORDERS_DATE
-                    + " FROM " + TABLE_ORDERS
-                    + " WHERE " + COLUMN_ORDERS_CUSTOMERID + " = " + String.format("%d", customer.id);
-            Cursor cursor1 = db.rawQuery(orderQuery, null);
-            ArrayList<Order> orderHistory = new ArrayList<Order>();
-            cursor1.moveToFirst();
-            while (cursor1.isAfterLast() == false) {
-                Order order = new Order();
-                order.id = cursor1.getInt(0);
-                order.date = cursor1.getString(1);
-
-                String purchaseQuery = "SELECT " + COLUMN_PURCHASES_ITEMID + "," + COLUMN_PURCHASES_QTYPURCHASED
-                        + " FROM " + TABLE_PURCHASES
-                        + " WHERE " + COLUMN_PURCHASES_ORDERID + " = " + String.format("%d", order.id);
-                Cursor cursor2 = db.rawQuery(purchaseQuery, null);
-                cursor2.moveToFirst();
-                while (cursor2.isAfterLast() == false) {
-                    PurchasedItem purchasedItem = new PurchasedItem();
-                    purchasedItem.id = cursor2.getInt(0);
-                    purchasedItem.qtyPurchased = cursor2.getInt(1);
-
-                    String itemQuery = "SELECT " + COLUMN_INVENTORY_NAME
-                            + " FROM " + TABLE_INVENTORY
-                            + " WHERE " + COLUMN_INVENTORY_ITEMID + " = " + String.format("%d", purchasedItem.id);
-                    Cursor cursor3 = db.rawQuery(itemQuery, null);
-                    cursor3.moveToFirst();
-                    purchasedItem.name = cursor3.getString(0);
-
-                    System.out.println(purchasedItem);
-                    order.items.add(purchasedItem);
-                    cursor2.moveToNext();
-                }
-                System.out.println(order);
-                orderHistory.add(order);
-                cursor1.moveToNext();
-            }
-            customer.orderHistory = orderHistory;
-            System.out.println(customer);
             customers.add(customer);
             cursor.moveToNext();
         }
 
-        for (Customer customer : customers) {
-            if (customer.orderHistory == null) {
-                customer.orderHistory = new ArrayList<Order>();
-            }
-        }
+        db.close();
         return customers;
     }
 
-    public ArrayList<Item> getItems() {
-        ArrayList<Item> items = new ArrayList<Item>();
-
-        String itemsQuery = "SELECT " + COLUMN_INVENTORY_ITEMID + ","
-                + COLUMN_INVENTORY_NAME + "," + COLUMN_INVENTORY_QTY
-                + " FROM " + TABLE_INVENTORY;
-
+    public ArrayList<Order> getOrderHistoryOfCustomer(Customer customer) {
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(itemsQuery, null);
+
+        String orderQuery = "SELECT " + COLUMN_ORDERS_ORDERID + "," + COLUMN_ORDERS_DATE
+                + " FROM " + TABLE_ORDERS
+                + " WHERE " + COLUMN_ORDERS_CUSTOMERID + " = " + String.format("%d", customer.id);
+        Cursor cursor1 = db.rawQuery(orderQuery, null);
+
+        ArrayList<Order> orderHistory = new ArrayList<Order>();
+
+        cursor1.moveToFirst();
+        while (cursor1.isAfterLast() == false) {
+            Order order = new Order();
+            order.id = cursor1.getInt(0);
+            order.date = cursor1.getString(1);
+
+            orderHistory.add(order);
+            cursor1.moveToNext();
+        }
+
+        db.close();
+        return orderHistory;
+    }
+
+    public ArrayList<PurchasedItem> getOrderItems(int orderId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ArrayList<PurchasedItem> items = new ArrayList<PurchasedItem>();
+
+        String purchaseQuery = "SELECT " + COLUMN_PURCHASES_ITEMID + "," + COLUMN_PURCHASES_QTYPURCHASED + ", " + COLUMN_INVENTORY_NAME
+                + " FROM " + TABLE_PURCHASES + ", " + TABLE_INVENTORY
+                + " WHERE " + COLUMN_PURCHASES_ORDERID + " = " + String.format("%d", orderId)
+                + " AND " + COLUMN_INVENTORY_ITEMID + " = " + COLUMN_PURCHASES_ITEMID;
+        Cursor cursor = db.rawQuery(purchaseQuery, null);
         cursor.moveToFirst();
         while (cursor.isAfterLast() == false) {
-            items.add( new Item(cursor.getInt(0), cursor.getString(1), cursor.getInt(2)));
+            PurchasedItem purchasedItem = new PurchasedItem();
+            purchasedItem.id = cursor.getInt(0);
+            purchasedItem.qtyPurchased = cursor.getInt(1);
+            purchasedItem.name = cursor.getString(2);
+
+            items.add(purchasedItem);
             cursor.moveToNext();
         }
 
+        db.close();
         return items;
-
     }
 
-    public void update(Item item) {
+    public void addItemsToOrder(ArrayList<PurchasedItem> items, Order order, Customer customer) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String update = "UPDATE " + TABLE_INVENTORY
-                + " SET " + COLUMN_INVENTORY_ITEMID + " = " + String.format("%d", item.id) + ","
-                + COLUMN_INVENTORY_NAME + " = " + "'" + item.name + "',"
-                + COLUMN_INVENTORY_QTY + " = " + String.format("%d", item.qtyAvailable)
-                + " WHERE " + COLUMN_INVENTORY_ITEMID + " = " + String.format("%d", item.id);
 
-        db.rawQuery(update, null);
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_ORDERS_CUSTOMERID, customer.id);
+        values.put(COLUMN_ORDERS_ORDERID, order.id);
+        values.put(COLUMN_ORDERS_DATE, order.date);
+        db.insert(TABLE_ORDERS, null, values);
+
+        for (PurchasedItem item : items) {
+            values = new ContentValues();
+            values.put(COLUMN_PURCHASES_ORDERID, order.id);
+            values.put(COLUMN_PURCHASES_ITEMID, item.id);
+            values.put(COLUMN_PURCHASES_QTYPURCHASED, item.qtyPurchased);
+            db.insert(TABLE_PURCHASES, null, values);
+        }
+        db.close();
     }
 
+    public int getNextOrderId() {
+        String query = "SELECT " + COLUMN_ORDERS_ORDERID + " FROM " + TABLE_ORDERS;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query, null);
+        cursor.moveToFirst();
+        int next = 0;
+        while (cursor.isAfterLast() == false) {
+            int id = cursor.getInt(0);
+            if (id > next)
+                next = id;
+            cursor.moveToNext();
+        }
+
+        return next+1;
+    }
 }
 
 
