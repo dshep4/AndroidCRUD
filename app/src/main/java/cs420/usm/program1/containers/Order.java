@@ -6,6 +6,9 @@ import android.os.Parcelable;
 
 /**
  * Created by drs4 on 9/3/2014.
+ * Represents an Order placed by a customer
+ * In a previous version an Order contained a List of Purchased Items,
+ * I have chosen to decouple them and have the associations be made in the database
  */
 public class Order implements Parcelable{
 

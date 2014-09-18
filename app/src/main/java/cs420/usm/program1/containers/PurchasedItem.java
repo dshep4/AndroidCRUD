@@ -2,6 +2,8 @@ package cs420.usm.program1.containers;
 
 /**
  * Created by drs4 on 9/3/2014.
+ * This class handles a Item that has been purchased.
+ * Here we are interested in the amount purchased and not the inventory available.
  */
 public class PurchasedItem {
     public int id;

@@ -5,6 +5,8 @@ import android.os.Parcelable;
 
 /**
  * Created by drs4 on 9/3/2014.
+ * Represents an Item in the database
+ * This is an Item in inventory
  */
 public class Item implements Parcelable {
     public int id;
@@ -24,14 +26,6 @@ public class Item implements Parcelable {
 
     public void updateQtyToAmount(int i) {
         qtyAvailable = i;
-    }
-
-    public void incrementQty(int i) {
-        qtyAvailable += i;
-    }
-
-    public int getQtyAvailable() {
-        return qtyAvailable;
     }
 
     public int describeContents() {

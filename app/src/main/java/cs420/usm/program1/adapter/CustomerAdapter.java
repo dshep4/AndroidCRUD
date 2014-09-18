@@ -15,6 +15,7 @@ import cs420.usm.program1.containers.Customer;
 
 /**
  * Created by drs4 on 9/3/2014.
+ *
  */
 public class CustomerAdapter extends ArrayAdapter<Customer> {
 

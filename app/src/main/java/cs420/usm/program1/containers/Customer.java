@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 /**
  * Created by drs4 on 9/3/2014.
+ * Represents a Customer in the database
  */
 public class Customer implements Parcelable{
     public int id;
