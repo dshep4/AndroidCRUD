@@ -35,13 +35,6 @@
         android:text="Submit"
         android:id="@+id/add_customer_submitButton"
         android:onClick="submitNewCustomer"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Response.."
-        android:textSize="20dp"
-        android:id="@+id/add_customer_response"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -23,7 +24,6 @@ public class NewItem extends Activity {
     EditText name;
     EditText qty;
 
-    TextView response;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +35,7 @@ public class NewItem extends Activity {
 
         name = (EditText) findViewById(R.id.add_new_item_name);
         qty = (EditText) findViewById(R.id.add_new_item_qty);
-        response = (TextView) findViewById(R.id.add_new_item_response);
+
     }
 
     @Override
@@ -74,18 +74,22 @@ public class NewItem extends Activity {
 
     public void submitNewItem(View view) {
         if (name.getText().toString().equals("") || qty.getText().toString().equals("")) {
-            response.setText("All fields required!");
+            Toast toast = Toast.makeText(getApplicationContext(), "All fields required!", Toast.LENGTH_LONG);
+            toast.show();
         }
         else if (itemExists(name.getText().toString())) {
-            response.setText("Item already exists!");
+            Toast toast = Toast.makeText(getApplicationContext(), "Item already exists!", Toast.LENGTH_LONG);
+            toast.show();
         }
         else {
             Item newItem = new Item(nextId(), name.getText().toString(), Integer.parseInt(qty.getText().toString()));
             items.add(newItem);
-            response.setText("Item added!");
 
             DBHandler db = new DBHandler(this.getApplicationContext());
             db.addItemToInventory(newItem);
+
+            Toast toast = Toast.makeText(getApplicationContext(), "Item Added!", Toast.LENGTH_LONG);
+            toast.show();
         }
     }
 
@@ -112,6 +116,5 @@ public class NewItem extends Activity {
     public void clearNewItemFields(View view) {
         name.setText("");
         qty.setText("");
-        response.setText("");
     }
 }

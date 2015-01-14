@@ -22,7 +22,6 @@ public class AddCustomer extends Activity {
     ArrayList<Customer> customers;
     EditText name;
     EditText address;
-    TextView response;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,13 +33,9 @@ public class AddCustomer extends Activity {
 
         name = (EditText) findViewById(R.id.add_customer_name);
         address = (EditText) findViewById(R.id.add_customer_address);
-        response = (TextView) findViewById(R.id.add_customer_response);
 
         name.setHint("Name");
         address.setHint("Address");
-
-        //hide response
-        response.setText("");
 
     }
 
@@ -105,7 +100,6 @@ public class AddCustomer extends Activity {
     public void clearFields(View view) {
         name.setText("");
         address.setText("");
-        response.setText("");
     }
 
     private boolean nameExists(String name) {
@@ -116,6 +110,7 @@ public class AddCustomer extends Activity {
         return false;
     }
 
+    //TODO - autogenerate Id values
     private int getNextId() {
         int id = 0;
         for (Customer customer : customers) {
